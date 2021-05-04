@@ -6,8 +6,8 @@ class Network:
 	def __init__(self, sizes):
 		self.num_layers = len(sizes)
 		self.sizes = sizes
-		self.biases = [np.random.rand(y,1) for y in sizes[1:]]
-		self.weights = [np.random.rand(y,x) for x,y in zip(sizes[:-1], sizes[1:])]
+		self.biases = [np.random.rand(y,1)*2-1 for y in sizes[1:]]
+		self.weights = [np.random.rand(y,x)*2-1 for x,y in zip(sizes[:-1], sizes[1:])]
 
 	def feedforward(self, a):
 		for b, w in zip(self.biases, self.weights):
@@ -27,23 +27,40 @@ class Network:
 			z = np.dot(w, activation) + b
 			z_vecs.append(z)
 			activation = relu(z)
+			#print("RELU(Z)")
+			#print(relu(z))
 			activations.append(activation)
 
 		# backpropagate
+		#print("RELU_PRIME:")
+		#print(relu_prime(z_vecs[-1]))
+		#print("Z_VECS:")
+		#print(z_vecs)
+		#print("Activations:")
+		#print(activations)
 		delta = cost_dv(activations[-1], y)*relu_prime(z_vecs[-1])
+		#print("DELTA:")
+		#print(delta)
 		nabla_w[-1] = np.dot(delta, activations[-2].transpose()) # wow!
 
 		for l in range(2, self.num_layers):
 			z = z_vecs[-l]
 			# just doing the same thing as before, only iteratively now
 			delta = np.dot(self.weights[-l+1].transpose(), delta)*relu_prime(z)
+			#print("DELTA:")
+			#print(delta)
 			nabla_b[-l] = delta
 			nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
+
+		#print("NABLA_B:")
+		#print(nabla_b)
+		#print("NABLA_W:")
+		#print(nabla_w)
 
 		return (nabla_b, nabla_w)
 
 	def train(self, training_data, epochs, batch_size, eta, test_data=None):
-
+		
 		if test_data:
 			n_test = len(test_data)
 		n = len(training_data)
@@ -79,8 +96,10 @@ def cost_dv(output, y):
 	return output-y
 
 def relu(x):
-	return np.maximum(x,0)
+	return 1.0/(1.0 + np.exp(-x))
+	# return np.maximum(x,0)
 
 def relu_prime(x):
-	return np.greater(x,0).astype(int)
+	return relu(x)*(1-relu(x))
+	#return np.greater(x,0).astype(int)
 
